@@ -1,23 +1,30 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
 
 let currentPlayer;
-let playerSymbols = new Map();
-playerSymbols.set(1,"&#10006;");
-playerSymbols.set(2,"&#9898;");
+let players = [
+  {
+    id: 1,
+    symbol: "&#10006;",
+    score: 0
+  },
+  {
+    id: 2,
+    symbol: "&#9898;",
+    score: 0
+  }
+];
 let game = new Array(3).fill([0,0,0]);
 
 function initiateGame() {
   document.getElementById("gameBoard").style.display = "flex";
-  for (let i = 0; i < 3;i++){
+  for (let i = 0; i < 3; i++){
     game[i] = new Array(3).fill(0);
   }
   let gameBoxes = document.getElementsByClassName("gameBox");
   for(let gameBox of gameBoxes){
     gameBox.innerHTML = "";
   }
-  currentPlayer = 1;
+  currentPlayer = players.find(player => player.id === 1);
 }
 
 function checkIfWinner(currentRow,currentColumn) {
@@ -80,6 +87,28 @@ function checkRowsAndColumns(currentRow, currentColumn) {
   return hasWon;
 }
 
+function checkIfGameOver(currentRow, currentColumn) {
+  let gameInfo = "";
+  let isOver = false;
+  if(checkIfWinner(currentRow, currentColumn)){
+      currentPlayer.score++;
+      gameInfo = `Scores: ${players[0].score} : ${players[1].score}`;
+      isOver = true;
+    }
+
+    //if no 0 value remains all fields have been set
+    if(game.filter(entry => entry.includes(0)).length < 1){
+      console.log("Game", game.includes(0));
+      isOver = true;
+      gameInfo = "draw";
+    }
+
+    if(isOver){
+      document.getElementById("gameBoard").style.display = "none";
+      document.getElementById("scores").innerHTML = gameInfo;
+    }
+}
+
 function setBoxValue(event) {
     let clickedBox = event.target;
     let currentRow = Math.floor(parseInt(clickedBox.id) / 3);
@@ -87,34 +116,21 @@ function setBoxValue(event) {
     if( game[currentRow][currentColumn] !== 0) {
       return;
     }
-    game[currentRow][currentColumn] = currentPlayer;
-    console.log("nulstellenl", game.filter((entry) => entry.filter(number => number === 0)).length);
-    if(!game.includes(0)){
-      console.log("draw");
-    }
+    game[currentRow][currentColumn] = currentPlayer.id;
     
-    if(checkIfWinner(currentRow, currentColumn)){
-      clickedBox.innerHTML = "WW";
-      document.getElementById("gameBoard").style.display = "none";
-      return;
-    }
-    clickedBox.innerHTML = playerSymbols.get(currentPlayer);
+    checkIfGameOver(currentRow, currentColumn);
+
+    clickedBox.innerHTML = currentPlayer.symbol;
     console.log(game);
-    currentPlayer = (currentPlayer %2) + 1;
+    currentPlayer = players.find(player => player.id === (currentPlayer.id % players.length) + 1);
 }
 
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
 
   <main>
+    <div id="scores"></div>
     <div id="gameBoard">
       <div class="gameBox" id="0" @click="setBoxValue"></div>
       <div class="gameBox" id="1" @click="setBoxValue"></div>
@@ -131,47 +147,27 @@ function setBoxValue(event) {
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-
 .gameBox {
   font-size: 50px;
   width: 100px;
   height: 100px;
   border: 1px solid black;
   text-align: center;
+  align-items: center;
 }
 
 #gameBoard {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   width: 300px;
+  text-align: center;
 }
 
-
+#scores {
+  font-size: 50px;
+  display: flex;
+  width: 300px;
+  text-align: center;
+}
 
 </style>
